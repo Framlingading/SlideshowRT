@@ -3,8 +3,11 @@ SETLOCAL EnableDelayedExpansion
 SET srcDir=%~1
 
 SET outDir=%temp%\outDir
+SET templateStart="%~dp0template_start.txt"
+SET templateMiddle="%~dp0template_middle.txt"
+SET templateEnd="%~dp0template_end.txt"
 
-IF EXIST %outDir% (echo y|RD /s %outDir%)>nul
+IF EXIST %outDir% RD /s /q %outDir%>nul
 MKDIR %outDir%
 
 :: We want to view gifs, we want them shuffled.  This is how we do it:
@@ -24,29 +27,33 @@ FOR /f "delims=" %%A IN ('DIR /s /b %srcDir%\*.gif') DO (
   SET nextPage=!RANDOM!.html
   CALL :WriteIntro !currentPage! !nextPage!
   CALL :push %%A
+  SET previousPage=!currentPage!
   SET currentPage=!nextPage!
 )
 
-CALL :WriteIntro %currentPage% %head%
+CALL :WriteIntro %previousPage% %head%
 
 ECHO Assigning image sources...
 
 FOR /f "delims=" %%A IN ('DIR /s /b %outDir%\*.html') DO (
   CALL :pop
   ECHO  -- !popped!
-  ECHO ^<img src="!popped!"^>^</a^>^</body^>^</html^> >>%%A
+  ECHO "!popped!" >>%%A
+  TYPE %templateEnd%>>%%A
 )
 
 START %outDir%\%head%
-
+ECHO Chain start: %outDir%\%head%
+Pause
 GOTO :EOF
 
 :WriteIntro
   SET thisPage=%outDir%\%1
   SET nextPage=%outDir%\%2
 
-  ECHO ^<!DOCTYPE html^> >%thisPage%
-  ECHO ^<html^>^<body^>^<a href="%nextPage%"^> >>%thisPage%
+  TYPE %templateStart% >%thisPage%
+  ECHO "%nextPage:\=\\%" >>%thisPage%
+  TYPE %templateMiddle%>>%thisPage%
 GOTO :EOF
 
 :push

@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <script type="text/javascript"><!--
+      function main()
+      {
+        resize();
+        setTimeout('advance()',12000);
+      }
+      function resize()
+      {
+        var wRatio = window.innerWidth / window.innerHeight;
+        var img = document.getElementById("thisImage");
+        var iRatio = img.width / img.height;
+        if (iRatio>wRatio)
+        {
+          img.setAttribute("width", "100%");
+        }
+        else
+        {
+          img.setAttribute("height", "100%");
+        }
+      }
+      function advance()
+      {
+        var nextImage = document.getElementById("nextImage");
+        window.location = nextImage.href;
+      }//-->
+    </script>
+  </head>
+  <body bgcolor="black" onLoad="main()">
+    <p align=center>
+      <a id="nextImage" href=
