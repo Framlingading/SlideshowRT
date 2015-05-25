@@ -1,12 +1,14 @@
 @ECHO off
 SETLOCAL EnableDelayedExpansion
-SET srcDir=%~1
 
+ECHO Setting up...
+SET srcDir=%~1
 SET outDir=%temp%\outDir
 SET templateStart="%~dp0template_start.txt"
 SET templateMiddle="%~dp0template_middle.txt"
 SET templateEnd="%~dp0template_end.txt"
 
+ECHO Clearing target directory...
 IF EXIST %outDir% RD /s /q %outDir%>nul
 MKDIR %outDir%
 
@@ -18,63 +20,47 @@ MKDIR %outDir%
 :: End result: since the html filenames are generated randomly, we end up with a shuffled chain of
 :: html pages, each containing one gif image
 
-ECHO Generating chain...
-
-SET head=%random%.html
-SET currentPage=%head%
-SET stack=
-FOR /f "delims=" %%A IN ('DIR /s /b %srcDir%\*.gif') DO (
-  SET nextPage=!RANDOM!.html
-  CALL :WriteIntro !currentPage! !nextPage!
-  CALL :push %%A
-  SET previousPage=!currentPage!
-  SET currentPage=!nextPage!
+ECHO Generating pages...
+FOR /f "delims=" %%A IN (DIR /s /b %srcDir%\*.gif %srcDir%\*.jpg') DO (
+  CALL :generate "%%A"
 )
 
-CALL :WriteIntro %previousPage% %head%
+ECHO Priming...
+FOR /f "delims=" %%A in ('dir /s /b %outDir%\*.html') DO (
+  SET last=%%A
+)
 
-ECHO Assigning image sources...
-
+ECHO Linking...
+SET head=
 FOR /f "delims=" %%A IN ('DIR /s /b %outDir%\*.html') DO (
-  CALL :pop
-  ECHO  -- !popped!
-  ECHO "!popped!" >>%%A
-  TYPE %templateEnd%>>%%A
-)
-
-START %outDir%\%head%
-ECHO Chain start: %outDir%\%head%
-Pause
-GOTO :EOF
-
-:WriteIntro
-  SET thisPage=%outDir%\%1
-  SET nextPage=%outDir%\%2
-
-  TYPE %templateStart% >%thisPage%
-  ECHO "%nextPage:\=\\%" >>%thisPage%
-  TYPE %templateMiddle%>>%thisPage%
-GOTO :EOF
-
-:push
-  SET stack=%1 %stack%
-GOTO :EOF
-
-:pop
-  CALL :_pop %stack%
-GOTO :EOF
-
-:_pop
-  SET popped=%1
-  SET tempStack=
-  CALL :reduce %stack%
-  SET stack=%tempStack%
-GOTO :EOF
-
-:reduce
-  SHIFT
-  IF NOT "%1"=="" (
-    SET tempStack=%tempStack% %1
-    GOTO :reduce
+  IF NOT DEFINED head (
+    SET head=%%A
+  ) ELSE (
+    CALL :Link !last! %%A
   )
+  set last=%%A
+)
+CALL :Link %last% %head%
+
+echo Chain start: %head%
+Pause
+
+GOTO :EOF
+
+:generate
+  SET newPage=%outDir%\%RANDOM%%RANDOM%.html
+  IF EXIST %newPage% GOTO :generate
+  TYPE %templateMiddle%>%newPage%
+  ECHO %1>>%newPage%
+  TYPE %templateEnd%>>%newPage%
+GOTO :EOF
+
+:Link
+  SET thisPage=%1
+  SET nextPage=%2
+  SET tempPage=%outDir%\tempPage
+  TYPE %templateStart%>%tempPage%
+  ECHO %nextPage%>>%tempPage%
+  TYPE %thisPage%>>%tempPage%
+  MOVE /y %tempPage% %thisPage%>nul
 GOTO :EOF
