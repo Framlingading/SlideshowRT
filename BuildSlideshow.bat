@@ -21,7 +21,7 @@ MKDIR %outDir%
 :: html pages, each containing one gif image
 
 ECHO Generating pages...
-FOR /f "delims=" %%A IN (DIR /s /b %srcDir%\*.gif %srcDir%\*.jpg') DO (
+FOR /f "delims=" %%A IN ('DIR /s /b %srcDir%\*.gif %srcDir%\*.jpg') DO (
   CALL :generate "%%A"
 )
 
