@@ -1,42 +1,13 @@
 <html>
   <head>
-    <script type="text/javascript"><!--
-      var delay;
-      function main()
-      {
-        resize();
-        setTimeout('advance()',delay);
-      }
-      function resize()
-      {
-        var wRatio = window.innerWidth / window.innerHeight;
-        var img = document.getElementById("thisImage");
-        var iRatio = img.width / img.height;
-        if (iRatio>wRatio)
-        {
-          img.setAttribute("width", "100%");
-        }
-        else
-        {
-          img.setAttribute("height", "91%");
-        }
-        var ext=img.src.substr(-3,3);
-        if (ext==="gif")
-        {
-          delay=12000;
-        }
-        else
-        {
-          delay=5000;
-        }
-      }
-      function advance()
-      {
-        var nextImage = document.getElementById("nextImage");
-        window.location = nextImage.href;
-      }//-->
+    <script type="text/javascript" src="slideshow.js">
     </script>
   </head>
-  <body bgcolor="black" onLoad="main()">
-    <p align=center>
-      <a id="nextImage" href=
+  <body bgcolor="black" onload="javascript:main()">
+    <div>
+      <div id="spacer" style="width:10%;float:left">
+        <p></p>
+      </div>
+      <div id="image" style="width:80%;float:left">
+        <p align=center>
+          <a id="imgLink" href=

@@ -1,32 +1,35 @@
 @ECHO off
 SETLOCAL EnableDelayedExpansion
 
-ECHO Setting up...
 SET srcDir=%~1
 SET outDir=%temp%\outDir
 SET templateStart="%~dp0template_start.txt"
 SET templateMiddle="%~dp0template_middle.txt"
 SET templateEnd="%~dp0template_end.txt"
 
-ECHO Clearing target directory...
 IF EXIST %outDir% RD /s /q %outDir%>nul
 MKDIR %outDir%
+XCOPY /yi "%~dp0slideshow.js" "%outDir%">nul
+XCOPY /yi "%~dp0arrow.png" "%outDir%">nul
 
-:: We want to view gifs, we want them shuffled.  This is how we do it:
-::   create a chain of n randomly-named html files, where n is the number of gif files we've found
-::   push all the gif paths on a stack, in default dir-output order
-::   loop through the html files in the chain in default dir-output order
-::     pop a gif path off the stack and assign it to the img element of the current html file
-:: End result: since the html filenames are generated randomly, we end up with a shuffled chain of
-:: html pages, each containing one gif image
+:: We want to view images, we want them shuffled.  This is the roundabout way we do it:
+::     foreach image file, in dir order
+::       write template middle, the image path, and template end to a randomly named html file
+::     foreach html file
+::       write template start, path to next html file, and current contents of html file to temp html file
+::       move temp html to the original html file location
+:: This creates a bunch of html files that are all chained together.  Because of the way the template is written,
+:: we have to post-process a bit with the javascript.  So the first thing the javascript does is take the file
+:: the img link points to, and set the next page link to point to it instead, and then it changes the img link to
+:: point to the image itself (so the image can be opened directly if the user desires.)
 
 ECHO Generating pages...
-FOR /f "delims=" %%A IN ('DIR /s /b %srcDir%\*.gif %srcDir%\*.jpg') DO (
+FOR /f "delims=" %%A IN ('DIR /s /b %srcDir%\*.gif %srcDir%\*.jpg %srcDir%\*.png') DO (
   CALL :generate "%%A"
 )
 
 ECHO Priming...
-FOR /f "delims=" %%A in ('dir /s /b %outDir%\*.html') DO (
+FOR /f "delims=" %%A IN ('DIR /s /b %outDir%\*.html') DO (
   SET last=%%A
 )
 
@@ -42,6 +45,7 @@ FOR /f "delims=" %%A IN ('DIR /s /b %outDir%\*.html') DO (
 )
 CALL :Link %last% %head%
 
+rem START %head%
 echo Chain start: %head%
 Pause
 
